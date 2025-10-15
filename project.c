@@ -3,9 +3,12 @@
 #include<conio.h>
 #include<windows.h>
 #include<time.h>
+#define WIDTH 40
+#define HEIGHT 20
+
 
 typedef struct player{   //structure for player
-    int x,int y ;
+    int x, y ;
 }player;
 
 typedef struct bullet{   //structre created for bullet
@@ -31,7 +34,21 @@ void gotoxy(int x,int y){
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
+void drawborder(){
+    for(int i=0;i<WIDTH+2;i++){
+        printf("-");
+    }
+    printf("\n");
+}
 
+void addbullet(){
+    bullet *newbul=(bullet*)malloc(sizeof(bullet));
+    newbul->x=p.x;
+    newbul->y=p.y-1;
+    newbul->next=bullets;
+    bullets=newbul;
+}
 int main(){
+    drawborder();//working
     return 0;
 }
