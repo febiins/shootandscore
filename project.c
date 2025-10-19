@@ -42,12 +42,72 @@ void drawborder(){
 }
 
 void addbullet(){
-    bullet *newbul=(bullet*)malloc(sizeof(bullet));
-    newbul->x=p.x;
-    newbul->y=p.y-1;
-    newbul->next=bullets;
-    bullets=newbul;
+    bullet *newbullet=(bullet*)malloc(sizeof(bullet));
+    newbullet->x=p.x;
+    newbullet->y=p.y-1;
+    newbullet->next=bullets;
+    bullets=newbullet;
 }
+
+void addenemy(){
+    enemy *newenemy=(enemy*)malloc(sizeof(enemy));
+    newenemy->x=rand()%width;
+    newenemy->y=0;
+    newenemy->next=enimies;
+    enimies=newenemy;
+}
+
+void movebullet(){
+    bullet *current=bullets,*previous=NULL;
+    while(current!=NULL){
+        current->y--;
+        if(current->y <0){
+            if(previous==NULL){
+                bullets=current->next;
+            }
+            else{
+                previous->next=current->next;
+            }
+            bullet *temp=current;
+            current=current->next;
+            free(temp);
+        }else{
+            previous=current;
+            current=current->next;
+        }
+    }
+}
+
+void moveenemy(){
+    enemy *current=enimies,*previous=NULL;
+
+    while(current!=NULL){
+        current->y++;
+        if(current->x==p.x && current->y==p.y){
+            gameover=1;
+            return;
+        }
+        if(current->y > HEIGHT){
+            if(previous==NULL){
+                enimies=current->next;
+            }
+            else{
+                previous->next=current->next;
+            }
+            enemy *temp=current;
+            current=current->next;
+            free(temp);
+        }else{
+            previous = current;
+            current = current->next;
+        }
+
+    }
+}
+
+
+
+
 int main(){
     drawborder();//working
     return 0;
