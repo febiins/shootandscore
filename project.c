@@ -105,6 +105,51 @@ void moveenemy(){
     }
 }
 
+void checkcollision() {
+    bullet *curb = bullets, *prevb = NULL;
+
+    while (curb != NULL) {
+        enemy *ecurr = enimies, *eprev = NULL;
+        int hit = 0;
+
+      
+        while (ecurr != NULL) {
+            if (curb->x == ecurr->x && curb->y == ecurr->y) {
+                hit = 1;
+                score++;
+
+               
+                if (eprev == NULL)
+                    enimies = ecurr->next;
+                else
+                    eprev->next = ecurr->next;
+
+                free(ecurr);
+                break;
+            }
+            eprev = ecurr;
+            ecurr = ecurr->next;
+        }
+
+        
+        if (hit) {
+            if (prevb == NULL)
+                bullets = curb->next;
+            else
+                prevb->next = curb->next;
+
+            bullet *temp = curb;
+            curb = curb->next;
+            free(temp);
+        } 
+        else {
+            prevb = curb;
+            curb = curb->next;
+        }
+    }
+}
+
+
 
 
 
