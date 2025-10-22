@@ -21,28 +21,25 @@ typedef struct enemy {
     struct enemy *next;
 } enemy;
 
-// Game state
 player p;
 int score = 0;
 int highscore = 0;
-int enemyspeed = 200; // milliseconds between enemy spawns
+int enemyspeed = 800; // slower enemies
 int gameover = 0;
 
 bullet *bullets = NULL;
-enemy *enemies = NULL;
+enemy *enimies = NULL;
 
 HANDLE hConsole;
 DWORD bytesWritten;
 
-// --- Hide cursor ---
+// Hide blinking cursor
 void hidecursor() {
-    CONSOLE_CURSOR_INFO info;
-    info.dwSize = 100;
-    info.bVisible = FALSE;
+    CONSOLE_CURSOR_INFO info = {100, FALSE};
     SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
 }
 
-// --- Add bullet ---
+// Add a bullet
 void addbullet() {
     bullet *newbullet = (bullet *)malloc(sizeof(bullet));
     newbullet->x = p.x;
@@ -51,16 +48,16 @@ void addbullet() {
     bullets = newbullet;
 }
 
-// --- Add enemy ---
+// Add enemy at random position
 void addenemy() {
     enemy *newenemy = (enemy *)malloc(sizeof(enemy));
     newenemy->x = rand() % WIDTH;
     newenemy->y = 0;
-    newenemy->next = enemies;
-    enemies = newenemy;
+    newenemy->next = enimies;
+    enimies = newenemy;
 }
 
-// --- Move bullets ---
+// Move bullets upward
 void movebullet() {
     bullet *current = bullets, *previous = NULL;
     while (current != NULL) {
@@ -78,9 +75,9 @@ void movebullet() {
     }
 }
 
-// --- Move enemies ---
+// Move enemies downward
 void moveenemy() {
-    enemy *current = enemies, *previous = NULL;
+    enemy *current = enimies, *previous = NULL;
     while (current != NULL) {
         current->y++;
         if (current->x == p.x && current->y == p.y) {
@@ -88,7 +85,7 @@ void moveenemy() {
             return;
         }
         if (current->y > HEIGHT) {
-            if (previous == NULL) enemies = current->next;
+            if (previous == NULL) enimies = current->next;
             else previous->next = current->next;
             enemy *temp = current;
             current = current->next;
@@ -100,18 +97,18 @@ void moveenemy() {
     }
 }
 
-// --- Check collisions ---
+// Check for bullet-enemy collisions
 void checkcollision() {
     bullet *curb = bullets, *prevb = NULL;
     while (curb != NULL) {
-        enemy *ecurr = enemies, *eprev = NULL;
+        enemy *ecurr = enimies, *eprev = NULL;
         int hit = 0;
 
         while (ecurr != NULL) {
             if (curb->x == ecurr->x && curb->y == ecurr->y) {
                 hit = 1;
                 score++;
-                if (eprev == NULL) enemies = ecurr->next;
+                if (eprev == NULL) enimies = ecurr->next;
                 else eprev->next = ecurr->next;
                 free(ecurr);
                 break;
@@ -133,16 +130,15 @@ void checkcollision() {
     }
 }
 
-// --- Draw frame (no flicker) ---
+// Draw the game frame (no flicker)
 void draw(int timeLeft) {
-    static char buffer[(WIDTH + 3) * (HEIGHT + 7)];
+    char buffer[(WIDTH + 3) * (HEIGHT + 7)];
     char *ptr = buffer;
 
     // Top border
     for (int i = 0; i < WIDTH + 2; i++) *ptr++ = '-';
     *ptr++ = '\n';
 
-    // Draw area
     for (int y = 0; y < HEIGHT; y++) {
         *ptr++ = '|';
         for (int x = 0; x < WIDTH; x++) {
@@ -158,7 +154,7 @@ void draw(int timeLeft) {
                 b = b->next;
             }
 
-            enemy *e = enemies;
+            enemy *e = enimies;
             while (e != NULL) {
                 if (e->x == x && e->y == y) {
                     ch = '*';
@@ -173,7 +169,6 @@ void draw(int timeLeft) {
         *ptr++ = '\n';
     }
 
-    // Bottom border
     for (int i = 0; i < WIDTH + 2; i++) *ptr++ = '-';
     *ptr++ = '\n';
 
@@ -184,24 +179,22 @@ void draw(int timeLeft) {
     WriteConsoleA(hConsole, buffer, size, &bytesWritten, NULL);
 }
 
-
+// Setup console
 void setup() {
     p.x = WIDTH / 2;
     p.y = HEIGHT - 1;
-    srand(time(NULL));
+    srand((unsigned)time(NULL));
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     hidecursor();
-
 
     COORD bufferSize = {WIDTH + 4, HEIGHT + 6};
     SetConsoleScreenBufferSize(hConsole, bufferSize);
 
-   
     SMALL_RECT windowSize = {0, 0, WIDTH + 1, HEIGHT + 5};
     SetConsoleWindowInfo(hConsole, TRUE, &windowSize);
 }
 
-
+// Main game loop
 void game() {
     setup();
     clock_t lastenemy = clock();
@@ -228,11 +221,10 @@ void game() {
         if ((clock() - lastenemy) * 1000 / CLOCKS_PER_SEC > enemyspeed) {
             addenemy();
             lastenemy = clock();
-            if (enemyspeed > 60) enemyspeed -=1;
         }
 
         draw(timeLeft);
-        Sleep(50);
+        Sleep(60); // smooth + steady frame rate
     }
 
     SetConsoleCursorPosition(hConsole, (COORD){0, HEIGHT + 6});
